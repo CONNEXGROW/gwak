@@ -1,10 +1,12 @@
-<!DOCTYPE
-html >
-  <html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post-Revenue Stage Payment Form</title>
+    <title>Ideation Stage - Payment Form</title>
+
+   
+    </script>
     <style>
         * {
             margin: 0;
@@ -193,28 +195,32 @@ html >
 </head>
 <body>
     <div class="header">
-        <h1>Post-Revenue Stage</h1>
-        <p>For revenue-generating startups ready to scale, secure funding, and expand their market presence</p>
+        <h1>Ideation Stage</h1>
+        <p>For Students & Early-Stage Founders with innovative ideas looking for validation and mentorship</p>
     </div>
 
     <div class="form-container">
         <form id="paymentForm">
             <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Name" required>
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required>
             </div>
+
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
             </div>
+
             <div class="form-group">
                 <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" class="form-control" placeholder="Phone Number" required>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="Enter your phone number" required>
             </div>
+
             <div class="form-group">
-                <label for="startup">Startup Name</label>
-                <input type="text" id="startup" name="startup" class="form-control" placeholder="Startup Name" required>
+                <label for="startup">Startup/Idea Name</label>
+                <input type="text" id="startup" name="startup" class="form-control" placeholder="Enter your startup or idea name" required>
             </div>
+
             <div class="grid">
                 <div class="form-group">
                     <label for="districtSearch">Search District</label>
@@ -226,16 +232,19 @@ html >
                         <option value="">Select District</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label for="state">State</label>
                     <input type="text" id="state" name="state" class="form-control" placeholder="State" readonly>
                 </div>
             </div>
-            <input type="hidden" id="stage" name="stage" value="3">
-            <div id="amountDisplay">Total Amount: ₹999.00 (+ GST)</div>
+
+            <div id="amountDisplay">Total Amount: ₹299 (+ GST)</div>
+
             <button type="submit" id="submitButton" class="btn-primary">Proceed to Payment</button>
         </form>
-        <div id="loadingIndicator" class="loading-indicator">
+
+        <div class="loading-indicator" id="loadingIndicator">
             <div class="spinner"></div>
             <p>Processing payment...</p>
         </div>
@@ -299,7 +308,7 @@ html >
                     state: state,
                     displayText: `${district}, ${state}`
                 });
-                
+
                 // Add to the hidden select for form submission
                 const option = document.createElement('option');
                 option.value = district;
@@ -322,38 +331,38 @@ html >
         function selectDistrict(district, state) {
             // Update the search box with the selected district
             districtSearch.value = `${district}, ${state}`;
-            
+
             // Update the hidden select
             districtSelect.value = district;
-            
+
             // Update the state field
             stateInput.value = state;
-            
+
             // Hide the search results
             searchResultsList.style.display = 'none';
         }
 
         function filterDistricts() {
             const query = districtSearch.value.toLowerCase();
-            
+
             // Clear previous results
             searchResultsList.innerHTML = '';
-            
+
             if (query.length < 2) {
                 searchResultsList.style.display = 'none';
                 return;
             }
-            
+
             // Filter districts that match the query
-            const matchingDistricts = allDistricts.filter(item => 
+            const matchingDistricts = allDistricts.filter(item =>
                 item.displayText.toLowerCase().includes(query)
             );
-            
+
             if (matchingDistricts.length === 0) {
                 searchResultsList.style.display = 'none';
                 return;
             }
-            
+
             // Display matching districts
             matchingDistricts.slice(0, 10).forEach(item => {
                 const resultItem = document.createElement('div');
@@ -364,14 +373,14 @@ html >
                 });
                 searchResultsList.appendChild(resultItem);
             });
-            
+
             // Show the results container
             searchResultsList.style.display = 'block';
         }
 
         // Event listeners
         districtSearch.addEventListener('input', filterDistricts);
-        
+
         // Show keyboard and results when focusing on search
         districtSearch.addEventListener('focus', function() {
             // This will ensure the mobile keyboard opens
@@ -381,7 +390,7 @@ html >
                 }
             }, 100);
         });
-        
+
         // Hide search results when clicking outside
         document.addEventListener('click', function(event) {
             if (!districtSearch.contains(event.target) && !searchResultsList.contains(event.target)) {
@@ -395,7 +404,7 @@ html >
             loadingIndicator.style.display = 'block';
 
             const formData = new FormData(form);
-            const amount = 120000;
+            const amount = 36000; // ₹299 in paise
 
             try {
                 const response = await fetch("https://four00k.onrender.com/create-order", {
@@ -406,7 +415,7 @@ html >
                         email: formData.get('email'),
                         phone: formData.get('phone'),
                         startup: formData.get('startup'),
-                        district: formData.get('district'),
+                        district: formData.get('district').split(',')[0],
                         state: formData.get('state'),
                         amount: amount
                     })
@@ -419,7 +428,7 @@ html >
                     key: "",
                     amount: amount,
                     currency: "INR",
-                    name: "Post-Revenue Stage",
+                    name: "Ideation Stage",
                     description: "Registration Payment",
                     order_id: data.orderId,
                     handler: async function(response) {
@@ -457,4 +466,3 @@ html >
     </script>
 </body>
 </html>
-
