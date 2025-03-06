@@ -147,13 +147,36 @@ html >
         .district-select {
             max-height: 200px;
             overflow-y: auto;
+            display: none;
         }
 
-        @media (min-width: 768px) {
-            .district-select {
-                height: auto;
-                size: 5;
-            }
+        /* Search Results Container */
+        .search-results {
+            position: relative;
+        }
+
+        .search-results-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-result-item:hover {
+            background-color: #3d3d3d;
         }
 
         /* Responsive */
@@ -195,7 +218,10 @@ html >
             <div class="grid">
                 <div class="form-group">
                     <label for="districtSearch">Search District</label>
-                    <input type="text" id="districtSearch" class="form-control" placeholder="Search District">
+                    <div class="search-results">
+                        <input type="text" id="districtSearch" class="form-control" placeholder="Search District" autocomplete="off">
+                        <div id="searchResultsList" class="search-results-list"></div>
+                    </div>
                     <select id="district" name="district" class="form-control district-select" required>
                         <option value="">Select District</option>
                     </select>
@@ -262,10 +288,19 @@ html >
         const loadingIndicator = document.getElementById('loadingIndicator');
         const form = document.getElementById('paymentForm');
         const districtSearch = document.getElementById('districtSearch');
+        const searchResultsList = document.getElementById('searchResultsList');
 
-        // Populate district options
+        // Create a flat array of all districts with their states
+        const allDistricts = [];
         Object.entries(stateToDistricts).forEach(([state, districts]) => {
             districts.forEach(district => {
+                allDistricts.push({
+                    district: district,
+                    state: state,
+                    displayText: `${district}, ${state}`
+                });
+                
+                // Add to the hidden select for form submission
                 const option = document.createElement('option');
                 option.value = district;
                 option.textContent = `${district}, ${state}`;
@@ -276,7 +311,7 @@ html >
         function updateState() {
             const selectedDistrict = districtSelect.value;
             for (const [state, districts] of Object.entries(stateToDistricts)) {
-                if (districts.includes(selectedDistrict.split(',')[0])) {
+                if (districts.includes(selectedDistrict)) {
                     stateInput.value = state;
                     return;
                 }
@@ -284,73 +319,75 @@ html >
             stateInput.value = '';
         }
 
-        function filterDistricts() {
-    const query = districtSearch.value.toLowerCase();
-    const options = districtSelect.options;
-    let matchFound = false;
-    let firstMatchIndex = -1;
-
-    for (let i = 1; i < options.length; i++) {
-        const optionText = options[i].textContent.toLowerCase();
-        if (optionText.includes(query)) {
-            options[i].style.display = '';
-            matchFound = true;
-            if (firstMatchIndex === -1) {
-                firstMatchIndex = i;
-            }
-        } else {
-            options[i].style.display = 'none';
-        }
-    }
-
-    // If matches are found, make sure the dropdown is open and scrolled to the first match
-    if (matchFound) {
-        // Focus the select element to show the dropdown
-        districtSelect.focus();
-        
-        // On desktop, try to scroll to the first match
-        if (window.innerWidth >= 768) {
-            // This ensures the first match is visible in the dropdown
-            if (firstMatchIndex >= 0) {
-                districtSelect.scrollTop = options[firstMatchIndex].offsetTop;
-            }
-        }
-    }
-
-    // If no match found, display a message or handle accordingly
-    if (!matchFound) {
-        console.log("No matching districts found.");
-    }
-}
-
-        // Make district select more mobile-friendly
-        function setupMobileExperience() {
-            // Check if we're on mobile
-            const isMobile = window.innerWidth < 768;
+        function selectDistrict(district, state) {
+            // Update the search box with the selected district
+            districtSearch.value = `${district}, ${state}`;
             
-            if (isMobile) {
-                // On mobile, we want the select to behave normally
-                districtSelect.size = 1;
-            } else {
-                // On desktop, show multiple options
-                districtSelect.size = 5;
-            }
+            // Update the hidden select
+            districtSelect.value = district;
+            
+            // Update the state field
+            stateInput.value = state;
+            
+            // Hide the search results
+            searchResultsList.style.display = 'none';
         }
 
-        // Call on page load and window resize
-        setupMobileExperience();
-        window.addEventListener('resize', setupMobileExperience);
+        function filterDistricts() {
+            const query = districtSearch.value.toLowerCase();
+            
+            // Clear previous results
+            searchResultsList.innerHTML = '';
+            
+            if (query.length < 2) {
+                searchResultsList.style.display = 'none';
+                return;
+            }
+            
+            // Filter districts that match the query
+            const matchingDistricts = allDistricts.filter(item => 
+                item.displayText.toLowerCase().includes(query)
+            );
+            
+            if (matchingDistricts.length === 0) {
+                searchResultsList.style.display = 'none';
+                return;
+            }
+            
+            // Display matching districts
+            matchingDistricts.slice(0, 10).forEach(item => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.textContent = item.displayText;
+                resultItem.addEventListener('click', () => {
+                    selectDistrict(item.district, item.state);
+                });
+                searchResultsList.appendChild(resultItem);
+            });
+            
+            // Show the results container
+            searchResultsList.style.display = 'block';
+        }
 
-        districtSelect.addEventListener('change', updateState);
+        // Event listeners
         districtSearch.addEventListener('input', filterDistricts);
-
-        // Add this event listener to make the dropdown open when clicking on the search box
-districtSearch.addEventListener('focus', function() {
-    // Focus the select element after a short delay
-    setTimeout(() => {
-        districtSelect.focus();
-    }, 100);
-});
+        
+        // Show keyboard and results when focusing on search
+        districtSearch.addEventListener('focus', function() {
+            // This will ensure the mobile keyboard opens
+            setTimeout(() => {
+                if (districtSearch.value.length >= 2) {
+                    filterDistricts();
+                }
+            }, 100);
+        });
+        
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!districtSearch.contains(event.target) && !searchResultsList.contains(event.target)) {
+                searchResultsList.style.display = 'none';
+            }
+        });
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -369,7 +406,7 @@ districtSearch.addEventListener('focus', function() {
                         email: formData.get('email'),
                         phone: formData.get('phone'),
                         startup: formData.get('startup'),
-                        district: formData.get('district').split(',')[0],
+                        district: formData.get('district'),
                         state: formData.get('state'),
                         amount: amount
                     })
