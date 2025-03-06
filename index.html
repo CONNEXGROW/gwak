@@ -285,25 +285,43 @@ html >
         }
 
         function filterDistricts() {
-            const query = districtSearch.value.toLowerCase();
-            const options = districtSelect.options;
-            let matchFound = false;
+    const query = districtSearch.value.toLowerCase();
+    const options = districtSelect.options;
+    let matchFound = false;
+    let firstMatchIndex = -1;
 
-            for (let i = 1; i < options.length; i++) {
-                const optionText = options[i].textContent.toLowerCase();
-                if (optionText.includes(query)) {
-                    options[i].style.display = '';
-                    matchFound = true;
-                } else {
-                    options[i].style.display = 'none';
-                }
+    for (let i = 1; i < options.length; i++) {
+        const optionText = options[i].textContent.toLowerCase();
+        if (optionText.includes(query)) {
+            options[i].style.display = '';
+            matchFound = true;
+            if (firstMatchIndex === -1) {
+                firstMatchIndex = i;
             }
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
 
-            // If no match found, display a message or handle accordingly
-            if (!matchFound) {
-                console.log("No matching districts found.");
+    // If matches are found, make sure the dropdown is open and scrolled to the first match
+    if (matchFound) {
+        // Focus the select element to show the dropdown
+        districtSelect.focus();
+        
+        // On desktop, try to scroll to the first match
+        if (window.innerWidth >= 768) {
+            // This ensures the first match is visible in the dropdown
+            if (firstMatchIndex >= 0) {
+                districtSelect.scrollTop = options[firstMatchIndex].offsetTop;
             }
         }
+    }
+
+    // If no match found, display a message or handle accordingly
+    if (!matchFound) {
+        console.log("No matching districts found.");
+    }
+}
 
         // Make district select more mobile-friendly
         function setupMobileExperience() {
@@ -325,6 +343,14 @@ html >
 
         districtSelect.addEventListener('change', updateState);
         districtSearch.addEventListener('input', filterDistricts);
+
+        // Add this event listener to make the dropdown open when clicking on the search box
+districtSearch.addEventListener('focus', function() {
+    // Focus the select element after a short delay
+    setTimeout(() => {
+        districtSelect.focus();
+    }, 100);
+});
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
